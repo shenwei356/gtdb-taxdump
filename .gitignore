@@ -1,0 +1,13 @@
+.directory
+.brename_detail.txt
+
+names.dmp
+nodes.dmp
+merged.dmp
+delnodes.dmp
+taxid.map
+
+not-used
+
+*.tsv.gz
+taxonomy/*/*.tsv
