@@ -1,13 +1,30 @@
-# GTDB taxonomy taxdump file with trackable TaxIds
+# GTDB taxonomy taxdump files with trackable TaxIds
+
+working in process, will be available soon.
 
 ## Results
 
 ## Method
 
+### Taxonomic hierarchy
+
+A GTDB species cluster contains >=1 assemblies, each can be treated as a strain.
+So we can assign each assembly a TaxId with the rank of "no rank" below the species rank.
+Therefore, we can also track the changes of these assemblies via the TaxId later.
+
 ### Generation of TaxIds
 
-We just hash the name (in lower case) of each taxon node to `uint64`
+We just hash the taxon name (in lower case) of each taxon node to `uint64`
 using [xxhash](https://github.com/cespare/xxhash/) and convert it to `uint32`.
+
+- For the NCBI assembly accession. 
+  1) The prefix `GCA_` is not used because some GenBank entries (`GCA_000176655.2` in R80) were moved
+  to RefSeq (`GCF_000176655.2` in R83) and the prefix changed. 
+  2) The version number is trimed because it may change.
+  So, `000176655` is hashed to get the TaxId.
+- For the non-NCBI assembly accession. The accession per se is hashed. E.g., `UBA12275`
+- For the name of a node. The taxon name per se is hashed. E.g, `Bacteria`.
+
 
 For these missing some taxon nodes, GTDB uses names of parent nodes
 e.g., [GCA_018897955.1](https://gtdb.ecogenomic.org/genome?gid=GCA_018897955.1).
@@ -21,14 +38,6 @@ In this case, we reassign a new TaxId by increasing the TaxId of name at lower r
 
     GB_GCA_003663585.1      d__Archaea;p__Thermoplasmatota;c__B47-G6;o__B47-G6B;f__47-G6;g__B47-G6;s__B47-G6 sp003663585
 
-### Taxonomic hierarchy
-
-We add an extra subspecies rank ("no rank") to the seven ranks of GTDB taxonomy,
-with the assembly accession (without version number) as the name of the taxon node.
-
-A GTDB species cluster contains >=1 assemblies, each can be treated as a strain.
-So we can assign each assembly a TaxId with the rank of "no rank" below the species rank.
-Therefore, we can also track the changes of these assemblies via the TaxId later.
 
 ### Data and tools
 
@@ -60,9 +69,9 @@ GTDB taxnomy files are download from https://data.gtdb.ecogenomic.org/releases/,
 
 ### Steps
     
-1. Generating taxdump files for the first version r080:
+1. Generating taxdump files for the first version r80:
 
-        $ taxonkit create-taxdump taxonomy/R080/*.tsv* --gtdb --out-dir gtdb-taxdump/R080
+        $ taxonkit create-taxdump taxonomy/R080/*.tsv* --gtdb --out-dir gtdb-taxdump/R080 --force
         15:19:59.816 [WARN] --gtdb-re-subs failed to extract ID for subspecies, the origninal value is used instead. e.g., UBA11420
         15:19:59.964 [INFO] 94759 records saved to gtdb-taxdump/R080/taxid.map
         15:20:00.011 [INFO] 110345 records saved to gtdb-taxdump/R080/nodes.dmp
@@ -72,5 +81,5 @@ GTDB taxnomy files are download from https://data.gtdb.ecogenomic.org/releases/,
     
 1. For later versions, we need the taxdump files of the first version to track merged and deleted nodes.
 
-
-
+        $ taxonkit create-taxdump --gtdb -x gtdb-taxdump/R080/ taxonomy/R083/*.tsv* \
+            --out-dir gtdb-taxdump/R083  --force
