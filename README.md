@@ -126,13 +126,17 @@ GTDB taxnomy files are download from https://data.gtdb.ecogenomic.org/releases/,
 
 ## Download
 
-https://github.com/shenwei356/gtdb-taxdump/releases
+The [release page](https://github.com/shenwei356/gtdb-taxdump/releases) contains taxdump files for all GTDB versions,
+and a TaxId changelog file (gtdb-taxid-changelog.csv.gz).
+
+Learn more about the [taxid-changelog](https://github.com/shenwei356/taxid-changelog).
 
 ## Results
 
 ### Taxon history of Escherichia coli
 
 [csvtk](https://github.com/shenwei356/csvtk) is used to help handle the results.
+
 
 Get the TaxId:
 
@@ -184,8 +188,7 @@ We can also check the history of an *Escherichia flexneri* assembly. Listing ass
     344832 [no rank] 000358285
     660349 [no rank] 001441345
 
-E.g., the taxon node `013185635` (taxid `23859`) , note that we removed the prefix (`GCA_` and `GCF_`) and version number (see method).
-Let's check the history:
+E.g., the taxon node `013185635` (taxid `23859`). Let's check the history via t he TaxId:
 
     $ zcat gtdb-taxid-changelog.csv.gz \
         | csvtk grep -f taxid -p 23859 \
@@ -197,6 +200,12 @@ Let's check the history:
 |23859|R202   |NEW           |            |013185635|no rank|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia flexneri;013185635|
 |23859|R207   |CHANGE_LIN_TAX|            |013185635|no rank|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli;013185635    |
 
+Note that we removed the prefix (`GCA_` and `GCF_`) and version number (see method).
+So the original assembly accession should be `GCA_013185635.X`, which can be found in `taxid.map` file:
+
+    $ cat gtdb-taxdump/R207/taxid.map \
+        | csvtk grep -Ht -f 2 -p 23859
+    GCF_013185635.1 23859
 
 The [GCA_013185635.1](https://gtdb.ecogenomic.org/genome?gid=GCA_013185635.1) page
 also shows the taxonomic information of current version (R207) and the taxon history:
