@@ -17,8 +17,9 @@ to create NCBI-style taxdump files for any taxonomy dataset, including GTDB and 
     + [Generation of TaxIds](#generation-of-taxids)
     + [Data and tools](#data-and-tools)
     + [Steps](#steps)
+* [Download](#download)
 * [Results](#results)
-    + [Taxon history of *Escherichia coli*](#taxon-history-of--escherichia-coli-)
+    + [Taxon history of *Escherichia coli*](#taxon-history-of-escherichia-coli)
     + [Common manipulations](#common-manipulations)
 * [Citation](#citation)
 * [Contributing](#contributing)
@@ -129,7 +130,7 @@ https://github.com/shenwei356/gtdb-taxdump/releases
 
 ## Results
 
-### Taxon history of *Escherichia coli*
+### Taxon history of Escherichia coli
 
 [csvtk](https://github.com/shenwei356/csvtk) is used to help handle the results.
 
@@ -206,6 +207,16 @@ also shows the taxonomic information of current version (R207) and the taxon his
 |R202   |d__Bacteria|p__Proteobacteria|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia flexneri|
 
 ### Common manipulations
+
+Except the four taxdump files, we provide a `taxid.map` file which maps genome accessions to TaxIds.
+
+    $ wc -l gtdb-taxdump/R207/*
+     14787 gtdb-taxdump/R207/delnodes.dmp
+      6483 gtdb-taxdump/R207/merged.dmp
+    401815 gtdb-taxdump/R207/names.dmp
+    401815 gtdb-taxdump/R207/nodes.dmp
+    317542 gtdb-taxdump/R207/taxid.map
+
 
 List all the genomes of a species, e.g., *Akkermansia muciniphila*,
 
