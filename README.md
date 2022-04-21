@@ -2,9 +2,9 @@
 
 Metagenomic tools like [Kraken2](https://github.com/DerrickWood/kraken2),
  [Centrifuge](https://github.com/DaehwanKimLab/centrifuge)
- and [KMCP](https://github.com/shenwei356/kmcp) support NCBI taxonomy in format of NCBI taxdump file.
+ and [KMCP](https://github.com/shenwei356/kmcp) support NCBI taxonomy in format of [NCBI taxdump files](https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/).
 [GTDB](https://gtdb.ecogenomic.org/), a prokaryotic genomes catalogue, has its own taxonomy data.
-Though the genomes, derived from GenBank and RefSeq, can be mappped to NCBI taxonomy,
+Though the genomes, derived from GenBank and RefSeq, can be mappped to NCBI taxonomy TaxIds,
 there's an urgent need to create its own taxonomy taxdump files with ***stable and trackable*** TaxIds.
 
 A [TaxonKit](https://github.com/shenwei356/taxonkit) command, `taxonkit create-taxdump` is created
@@ -18,7 +18,8 @@ to create NCBI-style taxdump files for any taxonomy dataset, including GTDB and 
     + [Data and tools](#data-and-tools)
     + [Steps](#steps)
 * [Results](#results)
-    + [Let's see the well-known *Escherichia coli* first](#let-s-see-the-well-known--escherichia-coli--first)
+    + [Taxon history of *Escherichia coli*](#taxon-history-of--escherichia-coli-)
+    + [Common manipulations](#common-manipulations)
 * [Citation](#citation)
 * [Contributing](#contributing)
 * [License](#license)
@@ -128,7 +129,7 @@ https://github.com/shenwei356/gtdb-taxdump/releases
 
 ## Results
 
-### Let's see the well-known *Escherichia coli* first
+### Taxon history of *Escherichia coli*
 
 [csvtk](https://github.com/shenwei356/csvtk) is used to help handle the results.
 
@@ -182,15 +183,56 @@ We can also check the history of an *Escherichia flexneri* assembly. Listing ass
     344832 [no rank] 000358285
     660349 [no rank] 001441345
 
-E.g., the `013185635`, note that we removed the prefix (`GCA_` and `GCF_`) and version number (see method).
+E.g., the taxon node `013185635` (taxid `23859`) , note that we removed the prefix (`GCA_` and `GCF_`) and version number (see method).
+Let's check the history:
+
+    $ zcat gtdb-taxid-changelog.csv.gz \
+        | csvtk grep -f taxid -p 23859 \
+        | csvtk cut -f -lineage-taxids \
+        | csvtk csv2md
+        
+|taxid|version|change        |change-value|name     |rank   |lineage                                                                                                                   |
+|:----|:------|:-------------|:-----------|:--------|:------|:-------------------------------------------------------------------------------------------------------------------------|
+|23859|R202   |NEW           |            |013185635|no rank|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia flexneri;013185635|
+|23859|R207   |CHANGE_LIN_TAX|            |013185635|no rank|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli;013185635    |
+
+
 The [GCA_013185635.1](https://gtdb.ecogenomic.org/genome?gid=GCA_013185635.1) page
-shows the taxonomic information of current version (R207) and the taxon history:
+also shows the taxonomic information of current version (R207) and the taxon history:
 
 |Release|Domain     |Phylum           |Class                 |Order              |Family               |Genus         |Species                |
 |:------|:----------|:----------------|:---------------------|:------------------|:--------------------|:-------------|:----------------------|
 |R207   |d__Bacteria|p__Proteobacteria|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia coli    |
 |R202   |d__Bacteria|p__Proteobacteria|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia flexneri|
 
+### Common manipulations
+
+List all the genomes of a species, e.g., *Akkermansia muciniphila*,
+
+    # Retreive the TaxId
+    $ echo Akkermansia muciniphila | taxonkit name2taxid --data-dir gtdb-taxdump/R207
+    Akkermansia muciniphila 2563076700
+    
+    # list subtree
+    $ taxonkit list --data-dir gtdb-taxdump/R207 -nr --ids  2563076700 | head -n 5
+    2563076700 [species] Akkermansia muciniphila
+      54773322 [no rank] 002885595
+      56256420 [no rank] 004015265
+      78545007 [no rank] 002885335
+      101987851 [no rank] 004015245
+    
+    # mapping TaxIds to Genome accessions with taxid.map
+    $ taxonkit list --data-dir gtdb-taxdump/R207 -I "" --ids  2563076700 \
+        | csvtk join -Ht -f '1;2' - gtdb-taxdump/R207/taxid.map \
+        | head -n 5
+    54773322        GCF_002885595.1
+    56256420        GCF_004015265.1
+    78545007        GCF_002885335.1
+    101987851       GCF_004015245.1
+    138593819       GCF_010223575.1
+
+Check more [TaxonKit commands and usages](https://bioinf.shenwei.me/taxonkit/usage/).
+    
 ## Citation
 
 > Shen, W., Ren, H., TaxonKit: a practical and efficient NCBI Taxonomy toolkit,
