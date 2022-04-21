@@ -11,3 +11,4 @@ not-used
 
 *.tsv.gz
 taxonomy/*/*.tsv
+gtdb-taxid-changelog.csv.gz
