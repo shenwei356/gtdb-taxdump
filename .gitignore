@@ -13,3 +13,4 @@ not-used
 taxonomy/*/*.tsv
 gtdb-taxid-changelog.csv.gz
 gtdb-taxdump.tar.gz
+taxid.map.stats*

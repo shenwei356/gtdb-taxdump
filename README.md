@@ -133,6 +133,47 @@ Learn more about the [taxid-changelog](https://github.com/shenwei356/taxid-chang
 
 ## Results
 
+### Summary
+
+Lineages (R207)
+
+    $ cat gtdb-taxdump/R207/taxid.map  \
+        | csvtk freq -Ht -f 2 -nr \
+        | taxonkit lineage -r -n -L --data-dir gtdb-taxdump/R207/ \
+        | taxonkit reformat -I 1 -f '{k}\t{p}\t{c}\t{o}\t{f}\t{g}\t{s}' --data-dir gtdb-taxdump/R207/ \
+        | csvtk add-header -t -n 'taxid,count,name,rank,superkindom,phylum,class,order,family,genus,species' \
+        > taxid.map.stats.tsv
+        
+Frequency of species
+
+    $ csvtk freq -t -nr -f species taxid.map.stats.tsv \
+        > taxid.map.stats.freq-species.tsv
+        
+    $ head -n 21 taxid.map.stats.freq-species.tsv | csvtk pretty -t
+    species                      frequency
+    --------------------------   ---------
+    Escherichia coli             26859
+    Staphylococcus aureus        13059
+    Salmonella enterica          12285
+    Klebsiella pneumoniae        11294
+    Streptococcus pneumoniae     8452
+    Mycobacterium tuberculosis   6836
+    Pseudomonas aeruginosa       5623
+    Acinetobacter baumannii      5417
+    Clostridioides difficile     2225
+    Enterococcus_B faecium       2177
+    Streptococcus pyogenes       2144
+    Neisseria meningitidis       2138
+    Listeria monocytogenes       1977
+    Campylobacter_D jejuni       1918
+    Enterococcus faecalis        1902
+    Enterobacter hormaechei_A    1867
+    Mycobacterium abscessus      1820
+    Burkholderia mallei          1780
+    Listeria monocytogenes_B     1699
+    Vibrio parahaemolyticus      1553
+    
+
 ### Taxon history of Escherichia coli
 
 [csvtk](https://github.com/shenwei356/csvtk) is used to help handle the results.
