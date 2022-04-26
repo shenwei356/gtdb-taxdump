@@ -20,6 +20,7 @@ to create NCBI-style taxdump files for any taxonomy dataset, including GTDB and 
 * [Download](#download)
 * [Results](#results)
     + [Taxon history of *Escherichia coli*](#taxon-history-of-escherichia-coli)
+    + [Species of the genus *Escherichia*](#species-of-the-genus-escherichia)
     + [Common manipulations](#common-manipulations)
 * [Citation](#citation)
 * [Contributing](#contributing)
@@ -149,7 +150,8 @@ Frequency of species
     $ csvtk freq -t -nr -f species taxid.map.stats.tsv \
         > taxid.map.stats.freq-species.tsv
         
-    $ head -n 21 taxid.map.stats.freq-species.tsv | csvtk pretty -t
+    $ head -n 21 taxid.map.stats.freq-species.tsv \
+        | csvtk pretty -t
     species                      frequency
     --------------------------   ---------
     Escherichia coli             26859
@@ -255,6 +257,56 @@ also shows the taxonomic information of current version (R207) and the taxon his
 |:------|:----------|:----------------|:---------------------|:------------------|:--------------------|:-------------|:----------------------|
 |R207   |d__Bacteria|p__Proteobacteria|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia coli    |
 |R202   |d__Bacteria|p__Proteobacteria|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia flexneri|
+
+### Species of the genus Escherichia
+    
+    # set the direcotory of taxdump file
+    export TAXONKIT_DB=gtdb-taxdump/R207
+    
+    $ taxonkit list --ids 3334977531 -I "" \
+        | taxonkit filter  -E species \
+        | taxonkit lineage -Lnr \
+        | tee Escherichia.tsv
+    205980079       Escherichia ruysiae     species
+    266095079       Escherichia marmotae    species
+    1474290498      Escherichia sp004211955 species
+    2519456452      Escherichia sp002965065 species
+    2673387089      Escherichia coli_E      species
+    2878517233      Escherichia albertii    species
+    3072179875      Escherichia fergusonii  species
+    3820717297      Escherichia sp005843885 species
+    4093283224      Escherichia coli        species
+    4221400829      Escherichia sp001660175 species
+    
+    $ csvtk join -Ht Escherichia.tsv \
+        <(cut -f 1 Escherichia.tsv \
+            | rush 'echo -ne "{}\t$(taxonkit list --ids {} -I "" \
+            | taxonkit filter -L species | wc -l)\n"') \
+        | csvtk add-header -t -n "taxid,name,rank,#assembly" \
+        | csvtk sort -t -k "#assembly:nr" -k name \
+        | csvtk csv2md -t
+        
+|taxid     |name                   |rank   |#assembly|
+|:---------|:----------------------|:------|:--------|
+|4093283224|Escherichia coli       |species|26859    |
+|2878517233|Escherichia albertii   |species|107      |
+|266095079 |Escherichia marmotae   |species|82       |
+|3072179875|Escherichia fergusonii |species|77       |
+|3820717297|Escherichia sp005843885|species|37       |
+|205980079 |Escherichia ruysiae    |species|36       |
+|4221400829|Escherichia sp001660175|species|3        |
+|1474290498|Escherichia sp004211955|species|2        |
+|2673387089|Escherichia coli_E     |species|1        |
+|2519456452|Escherichia sp002965065|species|1        |
+
+What's the *Escherichia coli_E*? There's only one genome: [GCF_011881725.1](https://gtdb.ecogenomic.org/genome?gid=GCF_011881725.1)
+
+    $ taxonkit list --ids 2673387089 -nr 
+    2673387089 [species] Escherichia coli_E
+      1744010345 [no rank] 011881725
+
+    $ grep 1744010345 gtdb-taxdump/R207/taxid.map 
+    GCF_011881725.1 1744010345
 
 ### Common manipulations
 
