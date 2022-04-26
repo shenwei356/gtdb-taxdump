@@ -8,7 +8,14 @@ Though the genomes, derived from GenBank and RefSeq, can be mappped to NCBI taxo
 there's an urgent need to create its own taxonomy taxdump files with ***stable and trackable*** TaxIds.
 
 A [TaxonKit](https://github.com/shenwei356/taxonkit) command, `taxonkit create-taxdump` is created
-to create NCBI-style taxdump files for any taxonomy dataset, including GTDB and [MGV](https://www.nature.com/articles/s41564-021-00928-6).
+to create NCBI-style taxdump files for any taxonomy dataset,
+including [GTDB](https://gtdb.ecogenomic.org/) and [ICTV](https://talk.ictvonline.org/).
+
+Related projects:
+
+- [ictv-taxdump](https://github.com/shenwei356/ictv-taxdump): NCBI-style taxdump files for International Committee on Taxonomy of Viruses (ICTV)
+- [taxid-changelog](https://github.com/shenwei356/taxid-changelog): NCBI taxonomic identifier (taxid) changelog
+- [taxonkit](https://github.com/shenwei356/taxonkit): A Practical and Efficient NCBI Taxonomy Toolkit
 
 ## Table of Contents
 
@@ -357,7 +364,7 @@ We welcome pull requests, bug fixes and issue reports.
 
 ## License
 
-[MIT License](https://github.com/shenwei356/taxid-changelog/blob/master/LICENSE)
+[MIT License](https://github.com/shenwei356/gtdb-taxdump/blob/master/LICENSE)
 
 ## Similar tools
 
