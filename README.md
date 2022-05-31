@@ -29,6 +29,7 @@ Related projects:
     + [Taxon history of *Escherichia coli*](#taxon-history-of-escherichia-coli)
     + [Species of the genus *Escherichia*](#species-of-the-genus-escherichia)
     + [Common manipulations](#common-manipulations)
+* [Known issues](#known-issues)
 * [Citation](#citation)
 * [Contributing](#contributing)
 * [License](#license)
@@ -94,7 +95,7 @@ GTDB taxnomy files are download from https://data.gtdb.ecogenomic.org/releases/,
         ├── ar53_taxonomy_r207.tsv.gz
         └── bac120_taxonomy_r207.tsv.gz
 
-[TaxonKit](https://github.com/shenwei356/taxonkit) v0.11.0 or later version is needed.
+[TaxonKit](https://github.com/shenwei356/taxonkit) v0.12.0 or later version is needed.
 
 ### Steps
     
@@ -352,6 +353,42 @@ List all the genomes of a species, e.g., *Akkermansia muciniphila*,
     138593819       GCF_010223575.1
 
 Check more [TaxonKit commands and usages](https://bioinf.shenwei.me/taxonkit/usage/).
+
+## Known issues
+
+### Inaccurate delnodes.dmp and merged.dmp for a few taxa with same names
+
+In old versions, some taxa had the same names, e.g., `1-14-0-10-36-11`.
+    
+    # r86.2
+    
+    # taxid of 1-14-0-10-36-11: 3509163818
+    GB_GCA_002762845.1	d__Archaea;p__Nanoarchaeota;c__Woesearchaeia;o__GW2011-AR9;f__GW2011-AR9;g__1-14-0-10-36-11;s__    
+    
+    # taxid of 1-14-0-10-36-11: 3509163819
+    GB_GCA_002778535.1	d__Bacteria;p__Patescibacteria;c__ABY1;o__Kuenenbacterales;f__UBA2196;g__1-14-0-10-36-11;s__
+    
+Later in r89, the Archaea genus `1-14-0-10-36-11` was renamed,
+while `taxid 3509163818` was assigned to Bacteria genus `1-14-0-10-36-11` and `taxid 3509163819` was marked in `delnodes.dmp`.
+
+    # genus changed, and assigned a new species
+    GB_GCA_002762845.1	d__Archaea;p__Nanoarchaeota;c__Nanoarchaeia;o__Woesearchaeales;f__GW2011-AR9;g__PCYB01;s__PCYB01 sp002762845
+    
+    # assigned a new species
+    # taxid of 1-14-0-10-36-11: 3509163818
+    GB_GCA_002778535.1	d__Bacteria;p__Patescibacteria;c__ABY1;o__UBA2196;f__UBA2196;g__1-14-0-10-36-11;s__1-14-0-10-36-11 sp002778535
+    
+As a result, the taxid-changelog showed:
+
+    $ zcat gtdb-taxid-changelog.csv.gz | csvtk grep -f taxid -p 3509163818
+    taxid,version,change,change-value,name,rank,lineage,lineage-taxids
+    3509163818,R086,NEW,,1-14-0-10-36-11,genus,Archaea;Nanoarchaeota;Woesearchaeia;GW2011-AR9;1-14-0-10-36-11,2587168575;2246723321;236669313;1472230377;3509163818
+    3509163818,R089,CHANGE_LIN_TAX,,1-14-0-10-36-11,genus,Bacteria;Patescibacteria;ABY1;UBA2196;1-14-0-10-36-11,609216830;741652572;2027207876;1322712682;3509163818
+
+    $ zcat gtdb-taxid-changelog.csv.gz | csvtk grep -f taxid -p 3509163819
+    taxid,version,change,change-value,name,rank,lineage,lineage-taxids
+    3509163819,R086,NEW,,1-14-0-10-36-11,genus,Bacteria;Patescibacteria;ABY1;Kuenenbacterales;UBA2196;1-14-0-10-36-11,609216830;741652572;2027207876;2441366341;1322712682;3509163819
+    3509163819,R089,DELETE,,1-14-0-10-36-11,genus,Bacteria;Patescibacteria;ABY1;Kuenenbacterales;UBA2196;1-14-0-10-36-11,609216830;741652572;2027207876;2441366341;1322712682;3509163819
     
 ## Citation
 
