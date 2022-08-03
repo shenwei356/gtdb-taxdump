@@ -393,7 +393,7 @@ As a result, the taxid-changelog showed:
 ## Citation
 
 > Shen, W., Ren, H., TaxonKit: a practical and efficient NCBI Taxonomy toolkit,
-> Journal of Genetics and Genomics, [https://doi.org/10.1016/j.jgg.2021.03.006](https://www.sciencedirect.com/science/article/pii/S1673852721000837)
+> Journal of Genetics and Genomics, [https://doi.org/10.1016/j.jgg.2021.03.006](https://www.sciencedirect.com/science/article/pii/S1673852721000837) [![Citation Badge](https://api.juleskreuer.eu/citation-badge.php?doi=10.1016/j.jgg.2021.03.006)](https://scholar.google.com/citations?view_op=view_citation&hl=en&user=wHF3Lm8AAAAJ&citation_for_view=wHF3Lm8AAAAJ:ULOm3_A8WrAC)
 
 ## Contributing
 
