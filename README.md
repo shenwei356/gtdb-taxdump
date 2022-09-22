@@ -103,11 +103,11 @@ GTDB taxnomy files are download from https://data.gtdb.ecogenomic.org/releases/,
 
         taxonkit create-taxdump taxonomy/R080/*.tsv* --gtdb --out-dir gtdb-taxdump/R080 --force
         15:19:59.816 [WARN] --gtdb-re-subs failed to extract ID for subspecies, the origninal value is used instead. e.g., UBA11420
-        15:19:59.964 [INFO] 94759 records saved to gtdb-taxdump/R080/taxid.map
-        15:20:00.011 [INFO] 110345 records saved to gtdb-taxdump/R080/nodes.dmp
-        15:20:00.048 [INFO] 110345 records saved to gtdb-taxdump/R080/names.dmp
-        15:20:00.048 [INFO] 0 records saved to gtdb-taxdump/R080/merged.dmp
-        15:20:00.048 [INFO] 0 records saved to gtdb-taxdump/R080/delnodes.dmp
+        21:52:12.406 [INFO] 94759 records saved to gtdb-taxdump/R080/taxid.map
+        21:52:12.467 [INFO] 110320 records saved to gtdb-taxdump/R080/nodes.dmp
+        21:52:12.506 [INFO] 110320 records saved to gtdb-taxdump/R080/names.dmp
+        21:52:12.506 [INFO] 0 records saved to gtdb-taxdump/R080/merged.dmp
+        21:52:12.506 [INFO] 0 records saved to gtdb-taxdump/R080/delnodes.dmp
     
 2. For later versions, we need the taxdump files of the revious version to track merged and deleted nodes.
 
@@ -321,10 +321,11 @@ What's the *Escherichia coli_E*? There's only one genome: [GCF_011881725.1](http
 Except the four taxdump files, we provide a `taxid.map` file which maps genome accessions to TaxIds.
 
     $ wc -l gtdb-taxdump/R207/*
-     14787 gtdb-taxdump/R207/delnodes.dmp
-      6483 gtdb-taxdump/R207/merged.dmp
+     14934 gtdb-taxdump/R207/delnodes.dmp
+      1529 gtdb-taxdump/R207/merged.dmp
     401815 gtdb-taxdump/R207/names.dmp
     401815 gtdb-taxdump/R207/nodes.dmp
+       107 gtdb-taxdump/R207/ranks.txt
     317542 gtdb-taxdump/R207/taxid.map
 
 
@@ -351,6 +352,41 @@ List all the genomes of a species, e.g., *Akkermansia muciniphila*,
     78545007        GCF_002885335.1
     101987851       GCF_004015245.1
     138593819       GCF_010223575.1
+    
+Find the history of a taxon using scientific name:
+
+    zcat gtdb-taxid-changelog.csv.gz \
+        | csvtk grep -f name -i -r -p "Escherichia dysenteriae" \
+        | csvtk cut -f -lineage,-lineage-taxids \
+        | csvtk csv2md
+    |taxid     |version|change|change-value|name                   |rank   |
+    |:---------|:------|:-----|:-----------|:----------------------|:------|
+    |1733194824|R089   |NEW   |            |Escherichia dysenteriae|species|
+    |1733194824|R207   |MERGE |4093283224  |Escherichia dysenteriae|species|
+    
+    
+    # another example
+    zcat gtdb-taxid-changelog.csv.gz \
+        | csvtk grep -f name -i -r -p "Escherichia coli" \
+        | csvtk cut -f -lineage,-lineage-taxids \
+        | csvtk csv2md
+    |taxid     |version|change|change-value                               |name              |rank   |
+    |:---------|:------|:-----|:------------------------------------------|:-----------------|:------|
+    |1258663139|R086   |NEW   |                                           |Escherichia coli_B|species|
+    |1258663139|R089   |MERGE |2357407638                                 |Escherichia coli_B|species|
+    |1258663139|R207   |DELETE|                                           |Escherichia coli_B|species|
+    |2357407638|R089   |NEW   |                                           |Escherichia coli_C|species|
+    |2357407638|R089   |ABSORB|1258663139;3450619207                      |Escherichia coli_C|species|
+    |2357407638|R207   |DELETE|                                           |Escherichia coli_C|species|
+    |2673387089|R202   |NEW   |                                           |Escherichia coli_E|species|
+    |2868793373|R089   |NEW   |                                           |Escherichia coli_D|species|
+    |2868793373|R207   |MERGE |4093283224                                 |Escherichia coli_D|species|
+    |3450619207|R080   |NEW   |                                           |Escherichia coli_A|species|
+    |3450619207|R089   |MERGE |2357407638                                 |Escherichia coli_A|species|
+    |3450619207|R207   |MERGE |4093283224                                 |Escherichia coli_A|species|
+    |4093283224|R080   |NEW   |                                           |Escherichia coli  |species|
+    |4093283224|R207   |ABSORB|1733194824;2868793373;3450619207;3912920909|Escherichia coli  |species|
+
 
 Check more [TaxonKit commands and usages](https://bioinf.shenwei.me/taxonkit/usage/).
 
@@ -389,6 +425,12 @@ As a result, the taxid-changelog showed:
     taxid,version,change,change-value,name,rank,lineage,lineage-taxids
     3509163819,R086,NEW,,1-14-0-10-36-11,genus,Bacteria;Patescibacteria;ABY1;Kuenenbacterales;UBA2196;1-14-0-10-36-11,609216830;741652572;2027207876;2441366341;1322712682;3509163819
     3509163819,R089,DELETE,,1-14-0-10-36-11,genus,Bacteria;Patescibacteria;ABY1;Kuenenbacterales;UBA2196;1-14-0-10-36-11,609216830;741652572;2027207876;2441366341;1322712682;3509163819
+
+### Unstable delnodes.dmp and merged.dmp for a few taxa of which genomes are mreged into different taxa
+
+An example: In R95, some (_Sphingobium japonicum_A_) genomes ([GCF_000445085.1](https://gtdb.ecogenomic.org/genome?gid=GCF_000445085.1))
+were merged into (*Sphingobium chinhatense*), while others ([GCF_000091125.1](https://gtdb.ecogenomic.org/genome?gid=GCF_000091125.1)) 
+into *Sphingobium indicum*. Check [details](https://github.com/shenwei356/gtdb-taxdump/issues/2#issuecomment-1233655355)
     
 ## Citation
 
