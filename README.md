@@ -30,6 +30,7 @@ Related projects:
     + [Species of the genus *Escherichia*](#species-of-the-genus-escherichia)
     + [Common manipulations](#common-manipulations)
 * [Known issues](#known-issues)
+* [Merging GTDB and NCBI taxonomy](#merging-gtdb-and-ncbi-taxonomy)
 * [Citation](#citation)
 * [Contributing](#contributing)
 * [License](#license)
@@ -438,6 +439,13 @@ An example: In R95, some (_Sphingobium japonicum_A_) genomes ([GCF_000445085.1](
 were merged into (*Sphingobium chinhatense*), while others ([GCF_000091125.1](https://gtdb.ecogenomic.org/genome?gid=GCF_000091125.1)) 
 into *Sphingobium indicum*. Check [details](https://github.com/shenwei356/gtdb-taxdump/issues/2#issuecomment-1233655355)
     
+## Merging GTDB and NCBI taxonomy
+
+- If you needs the taxdump files and the `taxid.map` file mapping genome assembly accesions to TaxIds, please follow
+   [Merging the GTDB taxonomy (for prokaryotic genomes from GTDB) and NCBI taxonomy (for genomes from NCBI)](#https://bioinf.shenwei.me/kmcp/database/#merging-gtdb-and-ncbi-taxonomy).
+- If you just need the taxdump files, please follow [Merging GTDB and NCBI taxonomy](https://bioinf.shenwei.me/taxonkit/tutorial/#merging-gtdb-and-ncbi-taxonomy).
+
+
 ## Citation
 
 > Shen, W., Ren, H., TaxonKit: a practical and efficient NCBI Taxonomy toolkit,
