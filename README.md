@@ -441,7 +441,7 @@ into *Sphingobium indicum*. Check [details](https://github.com/shenwei356/gtdb-t
     
 ## Merging GTDB and NCBI taxonomy
 
-- If you needs the taxdump files and the `taxid.map` file mapping genome assembly accesions to TaxIds, please follow
+- If you need the taxdump files and the `taxid.map` file mapping genome assembly accessions to TaxIds, please follow
   [Merging the GTDB taxonomy (for prokaryotic genomes from GTDB) and NCBI taxonomy (for genomes from NCBI)](https://bioinf.shenwei.me/kmcp/database/#merging-gtdb-and-ncbi-taxonomy).
 - If you just need the taxdump files, please follow [Merging GTDB and NCBI taxonomy](https://bioinf.shenwei.me/taxonkit/tutorial/#merging-gtdb-and-ncbi-taxonomy).
 
