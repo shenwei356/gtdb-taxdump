@@ -26,6 +26,9 @@ Related projects:
     + [Steps](#steps)
 * [Download](#download)
 * [Results](#results)
+    + [TaxId changes](#taxid-changes)
+    + [Species changes](#species-changes)
+    + [Summary](#summary)
     + [Taxon history of *Escherichia coli*](#taxon-history-of-escherichia-coli)
     + [Species of the genus *Escherichia*](#species-of-the-genus-escherichia)
     + [Common manipulations](#common-manipulations)
@@ -152,9 +155,51 @@ Learn more about the [taxid-changelog](https://github.com/shenwei356/taxid-chang
 
 ## Results
 
+### TaxId changes
+
+<img src="stats/changes.png" alt="" width="600"/>
+
+Note that the Y axis is the number of *TaxId*, not that of species.
+
+### Species changes
+
+How many species are there in R214?
+
+    $ taxonkit list --data-dir gtdb-taxdump/R214/ --ids 1 -I "" \
+        | taxonkit filter --data-dir gtdb-taxdump/R214/ -E species \
+        | wc -l
+    85205
+
+How many species are added in R214?
+
+    $ pigz -cd gtdb-taxid-changelog.csv.gz \
+        | csvtk grep -f version -p R214 \
+        | csvtk grep -f change -p NEW \
+        | csvtk grep -f rank -p species \
+        | csvtk nrow
+    23657
+
+How many species are deleted in R214?
+
+    $ pigz -cd gtdb-taxid-changelog.csv.gz \
+        | csvtk grep -f version -p R214 \
+        | csvtk grep -f change -p DELETE \
+        | csvtk grep -f rank -p species \
+        | csvtk nrow
+    2923
+
+How many species are merged into others in R214?
+
+    $ pigz -cd gtdb-taxid-changelog.csv.gz \
+        | csvtk grep -f version -p R214 \
+        | csvtk grep -f change -p MERGE \
+        | csvtk grep -f rank -p species \
+        | csvtk nrow
+    1429
+
 ### Summary
 
-Lineages (R214)
+Complete lineages (R214)
 
     $ cat gtdb-taxdump/R214/taxid.map  \
         | csvtk freq -Ht -f 2 -nr \
@@ -218,7 +263,9 @@ Any changes in the past? Hmm, of cause, it appeared in R80.
 |1945799576|R207   |ABSORB        |209923990;721309725;1733194824;1765437261|Escherichia coli|species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli|
 |1945799576|R214   |CHANGE_LIN_TAX|                                         |Escherichia coli|species|Bacteria;Pseudomonadota;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli|
 
-And it `absorb`s four taxa in R207, let's see what happened to them:
+In R214, the phylum `Proteobacteria` changed to `Pseudomonadota`, also mentioned in the [release announcement](https://forum.gtdb.ecogenomic.org/t/announcing-gtdb-r08-rs214/456).
+
+And *Escherichia coli* `absorb`s four taxa in R207, let's see what happened to them:
     
     $ zcat gtdb-taxid-changelog.csv.gz \
         | csvtk grep -f taxid -p 209923990,721309725,1733194824,1765437261 \
@@ -250,7 +297,7 @@ We can also check the history of an *Escherichia flexneri* assembly. Listing ass
     344832 [no rank] 000358285
     390840 [no rank] 001748545
 
-E.g., the taxon node `013185635` (taxid `23859`). Let's check the history via t he TaxId:
+E.g., the taxon node `013185635` (taxid `23859`). Let's check the history via the TaxId:
 
     $ zcat gtdb-taxid-changelog.csv.gz \
         | csvtk grep -f taxid -p 23859 \

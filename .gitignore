@@ -1,5 +1,6 @@
 .directory
 .brename_detail.txt
+.Rhistory
 
 names.dmp
 nodes.dmp
