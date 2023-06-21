@@ -98,9 +98,10 @@ GTDB taxnomy files are download from https://data.gtdb.ecogenomic.org/releases/,
     ├── R207
     │   ├── ar53_taxonomy_r207.tsv.gz
     │   └── bac120_taxonomy_r207.tsv.gz
-    └── R214
+    └── R214.1
         ├── ar53_taxonomy_r214.tsv.gz
         └── bac120_taxonomy_r214.tsv.gz
+
 
 [TaxonKit](https://github.com/shenwei356/taxonkit) v0.12.0 or a later version is needed.
 [v0.14.0](https://github.com/shenwei356/taxonkit/blob/master/CHANGELOG.md) or a later version is preferred.
@@ -140,7 +141,7 @@ TaxIds in `int32` following BLAST and DIAMOND, rather than `uint32` in previous 
             taxonomy/R207/*.tsv*  --out-dir gtdb-taxdump/R207  --force
 
         taxonkit create-taxdump --gtdb -x gtdb-taxdump/R207/ \
-            taxonomy/R214/*.tsv*  --out-dir gtdb-taxdump/R214  --force
+            taxonomy/R214.1/*.tsv*  --out-dir gtdb-taxdump/R214.1  --force
             
 3. Generating TaxId changelog
 
@@ -165,15 +166,15 @@ Note that the Y axis is the number of *TaxId*, not that of species.
 
 How many species are there in R214?
 
-    $ taxonkit list --data-dir gtdb-taxdump/R214/ --ids 1 -I "" \
-        | taxonkit filter --data-dir gtdb-taxdump/R214/ -E species \
+    $ taxonkit list --data-dir gtdb-taxdump/R214.1/ --ids 1 -I "" \
+        | taxonkit filter --data-dir gtdb-taxdump/R214.1/ -E species \
         | wc -l
     85205
 
 How many species are added in R214?
 
     $ pigz -cd gtdb-taxid-changelog.csv.gz \
-        | csvtk grep -f version -p R214 \
+        | csvtk grep -f version -p R214.1 \
         | csvtk grep -f change -p NEW \
         | csvtk grep -f rank -p species \
         | csvtk nrow
@@ -182,7 +183,7 @@ How many species are added in R214?
 How many species are deleted in R214?
 
     $ pigz -cd gtdb-taxid-changelog.csv.gz \
-        | csvtk grep -f version -p R214 \
+        | csvtk grep -f version -p R214.1 \
         | csvtk grep -f change -p DELETE \
         | csvtk grep -f rank -p species \
         | csvtk nrow
@@ -191,7 +192,7 @@ How many species are deleted in R214?
 How many species are merged into others in R214?
 
     $ pigz -cd gtdb-taxid-changelog.csv.gz \
-        | csvtk grep -f version -p R214 \
+        | csvtk grep -f version -p R214.1 \
         | csvtk grep -f change -p MERGE \
         | csvtk grep -f rank -p species \
         | csvtk nrow
@@ -201,10 +202,10 @@ How many species are merged into others in R214?
 
 Complete lineages (R214)
 
-    $ cat gtdb-taxdump/R214/taxid.map  \
+    $ cat gtdb-taxdump/R214.1/taxid.map  \
         | csvtk freq -Ht -f 2 -nr \
-        | taxonkit lineage -r -n -L --data-dir gtdb-taxdump/R214/ \
-        | taxonkit reformat -I 1 -f '{k}\t{p}\t{c}\t{o}\t{f}\t{g}\t{s}' --data-dir gtdb-taxdump/R214/ \
+        | taxonkit lineage -r -n -L --data-dir gtdb-taxdump/R214.1/ \
+        | taxonkit reformat -I 1 -f '{k}\t{p}\t{c}\t{o}\t{f}\t{g}\t{s}' --data-dir gtdb-taxdump/R214.1/ \
         | csvtk add-header -t -n 'taxid,count,name,rank,superkindom,phylum,class,order,family,genus,species' \
         > taxid.map.stats.tsv
         
@@ -247,7 +248,7 @@ Frequency of species
 Get the TaxId:
 
     $ echo Escherichia coli \
-        | taxonkit name2taxid --data-dir gtdb-taxdump/R214/
+        | taxonkit name2taxid --data-dir gtdb-taxdump/R214.1/
     Escherichia coli        1945799576
 
 Any changes in the past? Hmm, of cause, it appeared in R80. 
@@ -261,7 +262,7 @@ Any changes in the past? Hmm, of cause, it appeared in R80.
 |:---------|:------|:-------------|:----------------------------------------|:---------------|:------|:-----------------------------------------------------------------------------------------------------------|
 |1945799576|R080   |NEW           |                                         |Escherichia coli|species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli|
 |1945799576|R207   |ABSORB        |209923990;721309725;1733194824;1765437261|Escherichia coli|species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli|
-|1945799576|R214   |CHANGE_LIN_TAX|                                         |Escherichia coli|species|Bacteria;Pseudomonadota;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli|
+|1945799576|R214.1 |CHANGE_LIN_TAX|                                         |Escherichia coli|species|Bacteria;Pseudomonadota;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli|
 
 In R214, the phylum `Proteobacteria` changed to `Pseudomonadota`, also mentioned in the [release announcement](https://forum.gtdb.ecogenomic.org/t/announcing-gtdb-r08-rs214/456).
 
@@ -313,7 +314,7 @@ E.g., the taxon node `013185635` (taxid `23859`). Let's check the history via th
 Note that we removed the prefix (`GCA_` and `GCF_`) and version number (see method).
 So the original assembly accession should be `GCA_013185635.X`, which can be found in `taxid.map` file:
 
-    $ cat gtdb-taxdump/R214/taxid.map \
+    $ cat gtdb-taxdump/R214.1/taxid.map \
         | csvtk grep -Ht -f 2 -p 23859
     GCF_013185635.1 23859
 
@@ -322,14 +323,14 @@ also shows the taxonomic information of current version (R207) and the taxon his
 
 |Release|Domain     |Phylum           |Class                 |Order              |Family               |Genus         |Species                |
 |:------|:----------|:----------------|:---------------------|:------------------|:--------------------|:-------------|:----------------------|
-|R214   |d__Bacteria|p__Pseudomonadota|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia coli    |
+|R214.1 |d__Bacteria|p__Pseudomonadota|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia coli    |
 |R207   |d__Bacteria|p__Proteobacteria|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia coli    |
 |R202   |d__Bacteria|p__Proteobacteria|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia flexneri|
 
 ### Species of the genus Escherichia
     
     # set the direcotory of taxdump file
-    export TAXONKIT_DB=gtdb-taxdump/R214
+    export TAXONKIT_DB=gtdb-taxdump/R214.1
     
     $ echo Escherichia | taxonkit name2taxid 
     Escherichia     1187493883
@@ -442,7 +443,7 @@ Find the history of a taxon using scientific name:
     |209923990 |R089   |ABSORB        |1258663139;1303135559                    |Escherichia coli_C|species|
     |209923990 |R207   |MERGE         |1945799576                               |Escherichia coli_C|species|
     |525903441 |R202   |NEW           |                                         |Escherichia coli_E|species|
-    |525903441 |R214   |CHANGE_LIN_TAX|                                         |Escherichia coli_E|species|
+    |525903441 |R214.1 |CHANGE_LIN_TAX|                                         |Escherichia coli_E|species|
     |721309725 |R089   |NEW           |                                         |Escherichia coli_D|species|
     |721309725 |R207   |MERGE         |1945799576                               |Escherichia coli_D|species|
     |1258663139|R086   |NEW           |                                         |Escherichia coli_B|species|
@@ -451,7 +452,7 @@ Find the history of a taxon using scientific name:
     |1303135559|R089   |MERGE         |209923990                                |Escherichia coli_A|species|
     |1945799576|R080   |NEW           |                                         |Escherichia coli  |species|
     |1945799576|R207   |ABSORB        |209923990;721309725;1733194824;1765437261|Escherichia coli  |species|
-    |1945799576|R214   |CHANGE_LIN_TAX|                                         |Escherichia coli  |species|
+    |1945799576|R214.1 |CHANGE_LIN_TAX|                                         |Escherichia coli  |species|
 
 
 Check more [TaxonKit commands and usages](https://bioinf.shenwei.me/taxonkit/usage/).
