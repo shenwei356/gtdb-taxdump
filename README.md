@@ -48,7 +48,7 @@ Therefore, we can also track the changes of these assemblies via the TaxId later
 
 ### Generation of TaxIds
 
-We just hash the taxon name (in lower case) of each taxon node to `uint64`
+We just hash the rank+taxon_name (in lower case) of each taxon node to `uint64`
 using [xxhash](https://github.com/cespare/xxhash/) and convert it to `int32`.
 
 - For the NCBI assembly accession. 
@@ -98,27 +98,27 @@ GTDB taxnomy files are download from https://data.gtdb.ecogenomic.org/releases/,
     ├── R207
     │   ├── ar53_taxonomy_r207.tsv.gz
     │   └── bac120_taxonomy_r207.tsv.gz
-    └── R214.1
+    └── R214
         ├── ar53_taxonomy_r214.tsv.gz
         └── bac120_taxonomy_r214.tsv.gz
 
 
 [TaxonKit](https://github.com/shenwei356/taxonkit) v0.12.0 or a later version is needed.
-[v0.14.0](https://github.com/shenwei356/taxonkit/blob/master/CHANGELOG.md) or a later version is preferred.
-**Since v0.14.0, [taxonkit create-taxdump](https://bioinf.shenwei.me/taxonkit/usage/#create-taxdump) stores
+[v0.16.0](https://github.com/shenwei356/taxonkit/blob/master/CHANGELOG.md) or a later version is preferred.
+- **Since v0.14.0, [taxonkit create-taxdump](https://bioinf.shenwei.me/taxonkit/usage/#create-taxdump) stores
 TaxIds in `int32` following BLAST and DIAMOND, rather than `uint32` in previous versions**.
+- **Since v0.16.0, duplicated names with different ranks are allowed.**
 
 ### Steps
     
 1. Generating taxdump files for the first version r80:
 
         taxonkit create-taxdump taxonomy/R080/*.tsv* --gtdb --out-dir gtdb-taxdump/R080 --force
-        15:19:59.816 [WARN] --gtdb-re-subs failed to extract ID for subspecies, the origninal value is used instead. e.g., UBA11420
-        21:52:12.406 [INFO] 94759 records saved to gtdb-taxdump/R080/taxid.map
-        21:52:12.467 [INFO] 110320 records saved to gtdb-taxdump/R080/nodes.dmp
-        21:52:12.506 [INFO] 110320 records saved to gtdb-taxdump/R080/names.dmp
-        21:52:12.506 [INFO] 0 records saved to gtdb-taxdump/R080/merged.dmp
-        21:52:12.506 [INFO] 0 records saved to gtdb-taxdump/R080/delnodes.dmp
+        22:23:09.195 [INFO] 94759 records saved to gtdb-taxdump/R080/taxid.map
+        22:23:09.249 [INFO] 111705 records saved to gtdb-taxdump/R080/nodes.dmp
+        22:23:09.293 [INFO] 111705 records saved to gtdb-taxdump/R080/names.dmp
+        22:23:09.293 [INFO] 0 records saved to gtdb-taxdump/R080/merged.dmp
+        22:23:09.293 [INFO] 0 records saved to gtdb-taxdump/R080/delnodes.dmp
     
 2. For later versions, we need the taxdump files of the revious version to track merged and deleted nodes.
 
@@ -141,7 +141,7 @@ TaxIds in `int32` following BLAST and DIAMOND, rather than `uint32` in previous 
             taxonomy/R207/*.tsv*  --out-dir gtdb-taxdump/R207  --force
 
         taxonkit create-taxdump --gtdb -x gtdb-taxdump/R207/ \
-            taxonomy/R214.1/*.tsv*  --out-dir gtdb-taxdump/R214.1  --force
+            taxonomy/R214/*.tsv*  --out-dir gtdb-taxdump/R214  --force
             
 3. Generating TaxId changelog
 
@@ -166,15 +166,15 @@ Note that the Y axis is the number of *TaxId*, not that of species.
 
 How many species are there in R214?
 
-    $ taxonkit list --data-dir gtdb-taxdump/R214.1/ --ids 1 -I "" \
-        | taxonkit filter --data-dir gtdb-taxdump/R214.1/ -E species \
+    $ taxonkit list --data-dir gtdb-taxdump/R214/ --ids 1 -I "" \
+        | taxonkit filter --data-dir gtdb-taxdump/R214/ -E species \
         | wc -l
     85205
 
 How many species are added in R214?
 
     $ pigz -cd gtdb-taxid-changelog.csv.gz \
-        | csvtk grep -f version -p R214.1 \
+        | csvtk grep -f version -p R214 \
         | csvtk grep -f change -p NEW \
         | csvtk grep -f rank -p species \
         | csvtk nrow
@@ -183,7 +183,7 @@ How many species are added in R214?
 How many species are deleted in R214?
 
     $ pigz -cd gtdb-taxid-changelog.csv.gz \
-        | csvtk grep -f version -p R214.1 \
+        | csvtk grep -f version -p R214 \
         | csvtk grep -f change -p DELETE \
         | csvtk grep -f rank -p species \
         | csvtk nrow
@@ -192,7 +192,7 @@ How many species are deleted in R214?
 How many species are merged into others in R214?
 
     $ pigz -cd gtdb-taxid-changelog.csv.gz \
-        | csvtk grep -f version -p R214.1 \
+        | csvtk grep -f version -p R214 \
         | csvtk grep -f change -p MERGE \
         | csvtk grep -f rank -p species \
         | csvtk nrow
@@ -202,10 +202,10 @@ How many species are merged into others in R214?
 
 Complete lineages (R214)
 
-    $ cat gtdb-taxdump/R214.1/taxid.map  \
+    $ cat gtdb-taxdump/R214/taxid.map  \
         | csvtk freq -Ht -f 2 -nr \
-        | taxonkit lineage -r -n -L --data-dir gtdb-taxdump/R214.1/ \
-        | taxonkit reformat -I 1 -f '{k}\t{p}\t{c}\t{o}\t{f}\t{g}\t{s}' --data-dir gtdb-taxdump/R214.1/ \
+        | taxonkit lineage -r -n -L --data-dir gtdb-taxdump/R214/ \
+        | taxonkit reformat -I 1 -f '{k}\t{p}\t{c}\t{o}\t{f}\t{g}\t{s}' --data-dir gtdb-taxdump/R214/ \
         | csvtk add-header -t -n 'taxid,count,name,rank,superkindom,phylum,class,order,family,genus,species' \
         > taxid.map.stats.tsv
         
@@ -248,107 +248,110 @@ Frequency of species
 Get the TaxId:
 
     $ echo Escherichia coli \
-        | taxonkit name2taxid --data-dir gtdb-taxdump/R214.1/
-    Escherichia coli        1945799576
+        | taxonkit name2taxid --data-dir gtdb-taxdump/R214/
+    Escherichia coli        599451526
 
 Any changes in the past? Hmm, of cause, it appeared in R80. 
 
     $ zcat gtdb-taxid-changelog.csv.gz \
-        | csvtk grep -f taxid -p 1945799576 \
+        | csvtk grep -f taxid -p 599451526 \
         | csvtk cut -f -lineage-taxids \
         | csvtk csv2md
 
-|taxid     |version|change        |change-value                             |name            |rank   |lineage                                                                                                     |
-|:---------|:------|:-------------|:----------------------------------------|:---------------|:------|:-----------------------------------------------------------------------------------------------------------|
-|1945799576|R080   |NEW           |                                         |Escherichia coli|species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli|
-|1945799576|R207   |ABSORB        |209923990;721309725;1733194824;1765437261|Escherichia coli|species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli|
-|1945799576|R214.1 |CHANGE_LIN_TAX|                                         |Escherichia coli|species|Bacteria;Pseudomonadota;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli|
+|taxid    |version|change        |change-value                               |name            |rank   |lineage                                                                                                     |
+|:--------|:------|:-------------|:------------------------------------------|:---------------|:------|:-----------------------------------------------------------------------------------------------------------|
+|599451526|R080   |NEW           |                                           |Escherichia coli|species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli|
+|599451526|R207   |ABSORB        |1223627963;1584917910;1670897256;2030830777|Escherichia coli|species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli|
+|599451526|R214   |CHANGE_LIN_TAX|                                           |Escherichia coli|species|Bacteria;Pseudomonadota;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli|
 
 In R214, the phylum `Proteobacteria` changed to `Pseudomonadota`, also mentioned in the [release announcement](https://forum.gtdb.ecogenomic.org/t/announcing-gtdb-r08-rs214/456).
 
 And *Escherichia coli* `absorb`s four taxa in R207, let's see what happened to them:
     
     $ zcat gtdb-taxid-changelog.csv.gz \
-        | csvtk grep -f taxid -p 209923990,721309725,1733194824,1765437261 \
+        | csvtk grep -f taxid -p 1223627963,1584917910,1670897256,2030830777 \
         | csvtk cut -f -lineage-taxids \
         | csvtk csv2md
 
 
-|taxid     |version|change|change-value         |name                   |rank   |lineage                                                                                                            |
-|:---------|:------|:-----|:--------------------|:----------------------|:------|:------------------------------------------------------------------------------------------------------------------|
-|209923990 |R089   |NEW   |                     |Escherichia coli_C     |species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli_C     |
-|209923990 |R089   |ABSORB|1258663139;1303135559|Escherichia coli_C     |species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli_C     |
-|209923990 |R207   |MERGE |1945799576           |Escherichia coli_C     |species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli_C     |
-|721309725 |R089   |NEW   |                     |Escherichia coli_D     |species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli_D     |
-|721309725 |R207   |MERGE |1945799576           |Escherichia coli_D     |species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli_D     |
-|1733194824|R089   |NEW   |                     |Escherichia dysenteriae|species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia dysenteriae|
-|1733194824|R207   |MERGE |1945799576           |Escherichia dysenteriae|species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia dysenteriae|
-|1765437261|R089   |NEW   |                     |Escherichia flexneri   |species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia flexneri   |
-|1765437261|R207   |MERGE |1945799576           |Escherichia flexneri   |species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia flexneri   |
+|taxid     |version|change|change-value       |name                   |rank   |lineage                                                                                                            |
+|:---------|:------|:-----|:------------------|:----------------------|:------|:------------------------------------------------------------------------------------------------------------------|
+|1223627963|R089   |NEW   |                   |Escherichia dysenteriae|species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia dysenteriae|
+|1223627963|R207   |MERGE |599451526          |Escherichia dysenteriae|species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia dysenteriae|
+|1584917910|R089   |NEW   |                   |Escherichia coli_C     |species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli_C     |
+|1584917910|R089   |ABSORB|174151795;266865208|Escherichia coli_C     |species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli_C     |
+|1584917910|R207   |MERGE |599451526          |Escherichia coli_C     |species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli_C     |
+|1670897256|R089   |NEW   |                   |Escherichia coli_D     |species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli_D     |
+|1670897256|R207   |MERGE |599451526          |Escherichia coli_D     |species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli_D     |
+|2030830777|R089   |NEW   |                   |Escherichia flexneri   |species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia flexneri   |
+|2030830777|R207   |MERGE |599451526          |Escherichia flexneri   |species|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia flexneri   |
 
 Yes, *Escherichia flexneri* is merged into *Escherichia coli* as [reported in the release note of R207](https://forum.gtdb.ecogenomic.org/t/announcing-gtdb-r07-rs207/264).
 
 We can also check the history of an *Escherichia flexneri* assembly. Listing assemblies:
 
-    $ taxonkit list --data-dir gtdb-taxdump/R202/ --ids 1765437261 -n -r -I "" \
+    $ taxonkit list --data-dir gtdb-taxdump/R202/ --ids 2030830777 -n -r -I "" \
         | head -n 5
-    1765437261 [species] Escherichia flexneri
-    23859 [no rank] 013185635
-    292350 [no rank] 002736085
-    344832 [no rank] 000358285
-    390840 [no rank] 001748545
+    2030830777 [species] Escherichia flexneri
+    188562 [no rank] 009882745
+    246688 [no rank] 003982535
+    530007 [no rank] 003981095
+    930852 [no rank] 005393725
 
-E.g., the taxon node `013185635` (taxid `23859`). Let's check the history via the TaxId:
+E.g., the taxon node `013185635` (taxid `169219442`). Let's check the history via the TaxId:
+
+    $ echo 013185635 | taxonkit  name2taxid --data-dir gtdb-taxdump/R202/
+    013185635       169219442
 
     $ zcat gtdb-taxid-changelog.csv.gz \
-        | csvtk grep -f taxid -p 23859 \
+        | csvtk grep -f taxid -p 169219442 \
         | csvtk cut -f -lineage-taxids \
         | csvtk csv2md
         
-|taxid|version|change        |change-value|name     |rank   |lineage                                                                                                                   |
-|:----|:------|:-------------|:-----------|:--------|:------|:-------------------------------------------------------------------------------------------------------------------------|
-|23859|R202   |NEW           |            |013185635|no rank|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia flexneri;013185635|
-|23859|R207   |CHANGE_LIN_TAX|            |013185635|no rank|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli;013185635    |
-|23859|R214   |CHANGE_LIN_TAX|            |013185635|no rank|Bacteria;Pseudomonadota;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli;013185635    |
+|taxid    |version|change        |change-value|name     |rank   |lineage                                                                                                                   |
+|:--------|:------|:-------------|:-----------|:--------|:------|:-------------------------------------------------------------------------------------------------------------------------|
+|169219442|R202   |NEW           |            |013185635|no rank|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia flexneri;013185635|
+|169219442|R207   |CHANGE_LIN_TAX|            |013185635|no rank|Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli;013185635    |
+|169219442|R214   |CHANGE_LIN_TAX|            |013185635|no rank|Bacteria;Pseudomonadota;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli;013185635    |
 
 Note that we removed the prefix (`GCA_` and `GCF_`) and version number (see method).
 So the original assembly accession should be `GCA_013185635.X`, which can be found in `taxid.map` file:
 
-    $ cat gtdb-taxdump/R214.1/taxid.map \
-        | csvtk grep -Ht -f 2 -p 23859
-    GCF_013185635.1 23859
+    $ cat gtdb-taxdump/R214/taxid.map \
+        | csvtk grep -Ht -f 2 -p 169219442
+    GCF_013185635.1 169219442
 
 The [GCA_013185635.1](https://gtdb.ecogenomic.org/genome?gid=GCA_013185635.1) page
 also shows the taxonomic information of current version (R207) and the taxon history:
 
 |Release|Domain     |Phylum           |Class                 |Order              |Family               |Genus         |Species                |
 |:------|:----------|:----------------|:---------------------|:------------------|:--------------------|:-------------|:----------------------|
-|R214.1 |d__Bacteria|p__Pseudomonadota|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia coli    |
+|R214 |d__Bacteria|p__Pseudomonadota|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia coli    |
 |R207   |d__Bacteria|p__Proteobacteria|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia coli    |
 |R202   |d__Bacteria|p__Proteobacteria|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia flexneri|
 
 ### Species of the genus Escherichia
     
     # set the direcotory of taxdump file
-    export TAXONKIT_DB=gtdb-taxdump/R214.1
+    export TAXONKIT_DB=gtdb-taxdump/R214
     
     $ echo Escherichia | taxonkit name2taxid 
-    Escherichia     1187493883
+    Escherichia     1028471294
 
-    $ taxonkit list --ids 1187493883 -I "" \
+    $ taxonkit list --ids 1028471294 -I "" \
         | taxonkit filter  -E species \
         | taxonkit lineage -Lnr \
         | tee Escherichia.tsv
-    205980079       Escherichia ruysiae     species
-    266095079       Escherichia marmotae    species
-    371972804       Escherichia sp002965065 species
-    525903441       Escherichia coli_E      species
-    731033585       Escherichia albertii    species
-    924696227       Escherichia fergusonii  species
-    1474290498      Escherichia sp004211955 species
-    1673233649      Escherichia sp005843885 species
-    1845660592      Escherichia whittamii   species
-    1945799576      Escherichia coli        species
+    300575795       Escherichia sp005843885 species
+    599451526       Escherichia coli        species
+    1004016418      Escherichia sp004211955 species
+    1083756244      Escherichia ruysiae     species
+    1155214706      Escherichia fergusonii  species
+    1627494196      Escherichia sp002965065 species
+    1705205476      Escherichia whittamii   species
+    1854306313      Escherichia marmotae    species
+    1904681918      Escherichia coli_E      species
+    2087647928      Escherichia albertii    species
     
     $ csvtk join -Ht Escherichia.tsv \
         <(cut -f 1 Escherichia.tsv \
@@ -360,39 +363,37 @@ also shows the taxonomic information of current version (R207) and the taxon his
         
 |taxid     |name                   |rank   |#assembly|
 |:---------|:----------------------|:------|:--------|
-|1945799576|Escherichia coli       |species|33849    |
-|731033585 |Escherichia albertii   |species|164      |
-|924696227 |Escherichia fergusonii |species|141      |
-|266095079 |Escherichia marmotae   |species|103      |
-|205980079 |Escherichia ruysiae    |species|54       |
-|1673233649|Escherichia sp005843885|species|37       |
-|1845660592|Escherichia whittamii  |species|4        |
-|525903441 |Escherichia coli_E     |species|2        |
-|371972804 |Escherichia sp002965065|species|2        |
-|1474290498|Escherichia sp004211955|species|2        |
+|599451526 |Escherichia coli       |species|33849    |
+|2087647928|Escherichia albertii   |species|164      |
+|1155214706|Escherichia fergusonii |species|141      |
+|1854306313|Escherichia marmotae   |species|103      |
+|1083756244|Escherichia ruysiae    |species|54       |
+|300575795 |Escherichia sp005843885|species|37       |
+|1705205476|Escherichia whittamii  |species|4        |
+|1904681918|Escherichia coli_E     |species|2        |
+|1627494196|Escherichia sp002965065|species|2        |
+|1004016418|Escherichia sp004211955|species|2        |
 
 What's the *Escherichia coli_E*? There's only two genome: [GCF_011881725.1](https://gtdb.ecogenomic.org/genome?gid=GCF_011881725.1),
 and [GCF_023276905.1](https://gtdb.ecogenomic.org/genome?gid=GCF_023276905.1) (fresh new in R214).
 
-    $ taxonkit list --ids 525903441 -nr 
-    525903441 [species] Escherichia coli_E
-      393066338 [no rank] 023276905
-      1744010345 [no rank] 011881725
+    $ taxonkit list --ids 1904681918 -nr
+    1904681918 [species] Escherichia coli_E
+      231798968 [no rank] 011881725
+      1417695290 [no rank] 023276905
 
-    $ grep 1744010345 gtdb-taxdump/R214/taxid.map
-    GCF_011881725.1 1744010345
-
-    $ grep 393066338 gtdb-taxdump/R214/taxid.map
+    $ grep 011881725 gtdb-taxdump/R214/taxid.map
+    GCF_011881725.1 231798968
 
 ### Common manipulations
 
 Except the four taxdump files, we provide a `taxid.map` file which maps genome accessions to TaxIds.
 
     $ wc -l gtdb-taxdump/R214/*
-       19192 gtdb-taxdump/R214/delnodes.dmp
-        1487 gtdb-taxdump/R214/merged.dmp
-      510664 gtdb-taxdump/R214/names.dmp
-      510664 gtdb-taxdump/R214/nodes.dmp
+       19731 gtdb-taxdump/R214/delnodes.dmp
+        1535 gtdb-taxdump/R214/merged.dmp
+      516027 gtdb-taxdump/R214/names.dmp
+      516027 gtdb-taxdump/R214/nodes.dmp
          107 gtdb-taxdump/R214/ranks.txt
       402709 gtdb-taxdump/R214/taxid.map
 
@@ -400,25 +401,25 @@ List all the genomes of a species, e.g., *Akkermansia muciniphila*,
 
     # Retreive the TaxId
     $ echo Akkermansia muciniphila | taxonkit name2taxid --data-dir gtdb-taxdump/R214
-    Akkermansia muciniphila 415593052
+    Akkermansia muciniphila 791276584
     
     # list subtree
-    $ taxonkit list --data-dir gtdb-taxdump/R214 -nr --ids  415593052 | head -n 5
-    2563076700 [species] Akkermansia muciniphila
-      54773322 [no rank] 002885595
-      56256420 [no rank] 004015265
-      78545007 [no rank] 002885335
-      81917184 [no rank] 002885695
+    $ taxonkit list --data-dir gtdb-taxdump/R214 -nr --ids  791276584 | head -n 5
+    791276584 [species] Akkermansia muciniphila
+      9073941 [no rank] 008422865
+      13250174 [no rank] 008671835
+      25307961 [no rank] 004015245
+      30563015 [no rank] 004557465
     
     # mapping TaxIds to Genome accessions with taxid.map
-    $ taxonkit list --data-dir gtdb-taxdump/R214 -I "" --ids  415593052 \
+    $ taxonkit list --data-dir gtdb-taxdump/R214 -I "" --ids  791276584 \
         | csvtk join -Ht -f '1;2' - gtdb-taxdump/R207/taxid.map \
         | head -n 5
-    54773322        GCF_002885595.1
-    56256420        GCF_004015265.1
-    78545007        GCF_002885335.1
-    81917184        GCF_002885695.1
-    88269675        GCF_008423215.1
+    9073941         GCF_008422865.1
+    13250174        GCA_008671835.1
+    25307961        GCF_004015245.1
+    30563015        GCA_004557465.1
+    34761210        GCF_008422665.1
     
 Find the history of a taxon using scientific name:
 
@@ -428,8 +429,8 @@ Find the history of a taxon using scientific name:
         | csvtk csv2md
     |taxid     |version|change|change-value|name                   |rank   |
     |:---------|:------|:-----|:-----------|:----------------------|:------|
-    |1733194824|R089   |NEW   |            |Escherichia dysenteriae|species|
-    |1733194824|R207   |MERGE |1945799576  |Escherichia dysenteriae|species|
+    |1223627963|R089   |NEW   |            |Escherichia dysenteriae|species|
+    |1223627963|R207   |MERGE |599451526   |Escherichia dysenteriae|species|
     
     
     # another example
@@ -437,22 +438,24 @@ Find the history of a taxon using scientific name:
         | csvtk grep -f name -i -r -p "Escherichia coli" \
         | csvtk cut -f -lineage,-lineage-taxids \
         | csvtk csv2md
-    |taxid     |version|change        |change-value                             |name              |rank   |
-    |:---------|:------|:-------------|:----------------------------------------|:-----------------|:------|
-    |209923990 |R089   |NEW           |                                         |Escherichia coli_C|species|
-    |209923990 |R089   |ABSORB        |1258663139;1303135559                    |Escherichia coli_C|species|
-    |209923990 |R207   |MERGE         |1945799576                               |Escherichia coli_C|species|
-    |525903441 |R202   |NEW           |                                         |Escherichia coli_E|species|
-    |525903441 |R214.1 |CHANGE_LIN_TAX|                                         |Escherichia coli_E|species|
-    |721309725 |R089   |NEW           |                                         |Escherichia coli_D|species|
-    |721309725 |R207   |MERGE         |1945799576                               |Escherichia coli_D|species|
-    |1258663139|R086   |NEW           |                                         |Escherichia coli_B|species|
-    |1258663139|R089   |MERGE         |209923990                                |Escherichia coli_B|species|
-    |1303135559|R080   |NEW           |                                         |Escherichia coli_A|species|
-    |1303135559|R089   |MERGE         |209923990                                |Escherichia coli_A|species|
-    |1945799576|R080   |NEW           |                                         |Escherichia coli  |species|
-    |1945799576|R207   |ABSORB        |209923990;721309725;1733194824;1765437261|Escherichia coli  |species|
-    |1945799576|R214.1 |CHANGE_LIN_TAX|                                         |Escherichia coli  |species|
+    |taxid     |version|change        |change-value                               |name              |rank   |
+    |:---------|:------|:-------------|:------------------------------------------|:-----------------|:------|
+    |174151795 |R080   |NEW           |                                           |Escherichia coli_A|species|
+    |174151795 |R089   |MERGE         |1584917910                                 |Escherichia coli_A|species|
+    |266865208 |R086   |NEW           |                                           |Escherichia coli_B|species|
+    |266865208 |R089   |MERGE         |1584917910                                 |Escherichia coli_B|species|
+    |525903441 |R214.1 |NEW           |                                           |Escherichia coli_E|species|
+    |599451526 |R080   |NEW           |                                           |Escherichia coli  |species|
+    |599451526 |R207   |ABSORB        |1223627963;1584917910;1670897256;2030830777|Escherichia coli  |species|
+    |599451526 |R214   |CHANGE_LIN_TAX|                                           |Escherichia coli  |species|
+    |1584917910|R089   |NEW           |                                           |Escherichia coli_C|species|
+    |1584917910|R089   |ABSORB        |174151795;266865208                        |Escherichia coli_C|species|
+    |1584917910|R207   |MERGE         |599451526                                  |Escherichia coli_C|species|
+    |1670897256|R089   |NEW           |                                           |Escherichia coli_D|species|
+    |1670897256|R207   |MERGE         |599451526                                  |Escherichia coli_D|species|
+    |1904681918|R202   |NEW           |                                           |Escherichia coli_E|species|
+    |1904681918|R214   |CHANGE_LIN_TAX|                                           |Escherichia coli_E|species|
+    |1945799576|R214.1 |NEW           |                                           |Escherichia coli  |species|
 
 
 Check more [TaxonKit commands and usages](https://bioinf.shenwei.me/taxonkit/usage/).
@@ -467,10 +470,10 @@ In old versions, some taxa had the same names, e.g., `1-14-0-10-36-11`.
     
     # r86.2
     
-    # taxid of 1-14-0-10-36-11: 3509163818
+    # taxid of 1-14-0-10-36-11: 810514457
     GB_GCA_002762845.1	d__Archaea;p__Nanoarchaeota;c__Woesearchaeia;o__GW2011-AR9;f__GW2011-AR9;g__1-14-0-10-36-11;s__    
     
-    # taxid of 1-14-0-10-36-11: 3509163819
+    # taxid of 1-14-0-10-36-11: 810514458
     GB_GCA_002778535.1	d__Bacteria;p__Patescibacteria;c__ABY1;o__Kuenenbacterales;f__UBA2196;g__1-14-0-10-36-11;s__
     
 Later in r89, the Archaea genus `1-14-0-10-36-11` was renamed,
@@ -485,15 +488,15 @@ while `taxid 3509163818` was assigned to Bacteria genus `1-14-0-10-36-11` and `t
     
 As a result, the taxid-changelog showed:
 
-    $ zcat gtdb-taxid-changelog.csv.gz | csvtk grep -f taxid -p 3509163818
+    $ zcat gtdb-taxid-changelog.csv.gz | csvtk grep -f taxid -p 810514457
     taxid,version,change,change-value,name,rank,lineage,lineage-taxids
-    3509163818,R086,NEW,,1-14-0-10-36-11,genus,Archaea;Nanoarchaeota;Woesearchaeia;GW2011-AR9;1-14-0-10-36-11,2587168575;2246723321;236669313;1472230377;3509163818
-    3509163818,R089,CHANGE_LIN_TAX,,1-14-0-10-36-11,genus,Bacteria;Patescibacteria;ABY1;UBA2196;1-14-0-10-36-11,609216830;741652572;2027207876;1322712682;3509163818
+    810514457,R086,NEW,,1-14-0-10-36-11,genus,Archaea;Nanoarchaeota;Woesearchaeia;GW2011-AR9;GW2011-AR9;1-14-0-10-36-11,1337977286;479299029;1556208458;912946924;930607342;810514457
+    810514457,R089,CHANGE_LIN_TAX,,1-14-0-10-36-11,genus,Bacteria;Patescibacteria;ABY1;UBA2196;UBA2196;1-14-0-10-36-11,81602897;1771153889;802220661;1881906388;2078787713;810514457
 
-    $ zcat gtdb-taxid-changelog.csv.gz | csvtk grep -f taxid -p 3509163819
+    $ zcat gtdb-taxid-changelog.csv.gz | csvtk grep -f taxid -p 810514458
     taxid,version,change,change-value,name,rank,lineage,lineage-taxids
-    3509163819,R086,NEW,,1-14-0-10-36-11,genus,Bacteria;Patescibacteria;ABY1;Kuenenbacterales;UBA2196;1-14-0-10-36-11,609216830;741652572;2027207876;2441366341;1322712682;3509163819
-    3509163819,R089,DELETE,,1-14-0-10-36-11,genus,Bacteria;Patescibacteria;ABY1;Kuenenbacterales;UBA2196;1-14-0-10-36-11,609216830;741652572;2027207876;2441366341;1322712682;3509163819
+    810514458,R086,NEW,,1-14-0-10-36-11,genus,Bacteria;Patescibacteria;ABY1;Kuenenbacterales;UBA2196;1-14-0-10-36-11,81602897;1771153889;802220661;2147262481;2078787713;810514458
+    810514458,R089,DELETE,,1-14-0-10-36-11,genus,Bacteria;Patescibacteria;ABY1;Kuenenbacterales;UBA2196;1-14-0-10-36-11,81602897;1771153889;802220661;2147262481;2078787713;810514458
 
 ### Unstable delnodes.dmp and merged.dmp for a few taxa of which genomes are mreged into different taxa
 
