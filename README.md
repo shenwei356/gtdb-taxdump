@@ -129,7 +129,14 @@ TaxIds in `int32` following BLAST and DIAMOND, rather than `uint32` in previous 
         taxonkit create-taxdump --gtdb -x gtdb-taxdump/R207/ \
             taxonomy/R214/*.tsv*  --out-dir gtdb-taxdump/R214  --force
             
-3. Generating TaxId changelog
+3. Generating TaxId changelog (Note that, it's not perfect for GTDB taxonomy).
+
+> We only check and eliminate taxid collision within a single version of taxonomy data.
+> Therefore, if you create taxid-changelog with "taxid-changelog", different taxons
+> in multiple versions might have the same TaxIds and some change events might be wrong.
+>
+> A single version of taxonomic data created by "taxonkit create-taxdump" has no problem,
+> it's just the changelog might not be perfect.
 
         taxonkit taxid-changelog -i gtdb-taxdump -o gtdb-taxid-changelog.csv.gz --verbose
 
@@ -141,6 +148,58 @@ and a TaxId changelog file (gtdb-taxid-changelog.csv.gz).
 Learn more about the [taxid-changelog](https://github.com/shenwei356/taxid-changelog).
 
 ## Results
+
+### Basic usage
+
+set the environment variable for simplicity
+
+    export TAXONKIT_DB=gtdb-taxdump/R214/
+
+Query the TaxId via an assembly accession
+
+    grep GCA_905234495.1 gtdb-taxdump/R214/taxid.map
+    GCA_905234495.1 254122285
+
+Query the TaxId via taxon name
+
+    echo Escherichia coli \
+        | taxonkit name2taxid
+    Escherichia coli        599451526
+
+Complete lineage
+
+    # with lineage
+    echo 599451526 \
+        | taxonkit lineage -nr
+    599451526       Bacteria;Pseudomonadota;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli    Escherichia coli        species
+
+    # with reformat
+    echo 599451526 \
+        | taxonkit reformat -I 1
+    599451526       Bacteria;Pseudomonadota;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli
+
+Complete lineage (GTDB style)
+
+    echo 599451526 \
+        | taxonkit reformat -I 1 -P --prefix-k d__
+    599451526       d__Bacteria;p__Pseudomonadota;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli
+
+All lineages
+
+    taxonkit list --ids 1 -I "" \
+        | taxonkit filter -E species \
+        | taxonkit reformat -I 1 -P --prefix-k d__ \
+        > gtdb_species.txt
+
+Checking consistency
+
+    $ zcat taxonomy/R214/* | cut -f 2 | sort | uniq | md5sum
+    7eb83651aa8491399c2684f3ceb1a404  -
+
+    $ cut -f 2 gtdb_species.txt | sort | md5sum
+    7eb83651aa8491399c2684f3ceb1a404  -
+
+
 
 ### TaxId changes
 
@@ -164,7 +223,7 @@ How many species are added in R214?
         | csvtk grep -f change -p NEW \
         | csvtk grep -f rank -p species \
         | csvtk nrow
-    23657
+    23660
 
 How many species are deleted in R214?
 
@@ -182,7 +241,7 @@ How many species are merged into others in R214?
         | csvtk grep -f change -p MERGE \
         | csvtk grep -f rank -p species \
         | csvtk nrow
-    1429
+    1430
 
 ### Summary
 
