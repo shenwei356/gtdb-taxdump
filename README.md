@@ -26,6 +26,7 @@ Related projects:
     + [Steps](#steps)
 * [Download](#download)
 * [Results](#results)
+    + [Basic usage](#basic-usage)
     + [TaxId changes](#taxid-changes)
     + [Species changes](#species-changes)
     + [Summary](#summary)
