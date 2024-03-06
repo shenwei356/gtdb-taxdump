@@ -59,20 +59,6 @@ using [xxhash](https://github.com/cespare/xxhash/) and convert it to `int32`.
 - For the non-NCBI assembly accession. The accession per se is hashed. E.g., `UBA12275`
 - For the name of a node. The taxon name per se is hashed. E.g, `Bacteria`.
 
-
-For these missing some taxon nodes, GTDB uses names of parent nodes
-e.g., [GCA_018897955.1](https://gtdb.ecogenomic.org/genome?gid=GCA_018897955.1).
-So in these cases, TaxIds keep distinct.
-
-    GB_GCA_018897955.1      d__Archaea;p__EX4484-52;c__EX4484-52;o__EX4484-52;f__LFW-46;g__LFW-46;s__LFW-46 sp018897155
-
-We also detect duplicate names with different ranks, e.g., [GCA_003663585.1](https://gtdb.ecogenomic.org/genome?gid=GCA_003663585.1).
-The Class and Genus have the same name `B47-G6`, while the Order and Family between them have different names.
-In this case, we reassign a new TaxId by increasing the TaxId of name at lower rank until it being distinct.
-
-    GB_GCA_003663585.1      d__Archaea;p__Thermoplasmatota;c__B47-G6;o__B47-G6B;f__47-G6;g__B47-G6;s__B47-G6 sp003663585
-
-
 ### Data and tools
 
 GTDB taxnomy files are download from https://data.gtdb.ecogenomic.org/releases/, and organized as:
@@ -326,7 +312,7 @@ also shows the taxonomic information of current version (R207) and the taxon his
 
 |Release|Domain     |Phylum           |Class                 |Order              |Family               |Genus         |Species                |
 |:------|:----------|:----------------|:---------------------|:------------------|:--------------------|:-------------|:----------------------|
-|R214 |d__Bacteria|p__Pseudomonadota|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia coli    |
+|R214   |d__Bacteria|p__Pseudomonadota|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia coli    |
 |R207   |d__Bacteria|p__Proteobacteria|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia coli    |
 |R202   |d__Bacteria|p__Proteobacteria|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae|g__Escherichia|s__Escherichia flexneri|
 
@@ -438,24 +424,25 @@ Find the history of a taxon using scientific name:
         | csvtk grep -f name -i -r -p "Escherichia coli" \
         | csvtk cut -f -lineage,-lineage-taxids \
         | csvtk csv2md
-    |taxid     |version|change        |change-value                               |name              |rank   |
-    |:---------|:------|:-------------|:------------------------------------------|:-----------------|:------|
-    |174151795 |R080   |NEW           |                                           |Escherichia coli_A|species|
-    |174151795 |R089   |MERGE         |1584917910                                 |Escherichia coli_A|species|
-    |266865208 |R086   |NEW           |                                           |Escherichia coli_B|species|
-    |266865208 |R089   |MERGE         |1584917910                                 |Escherichia coli_B|species|
-    |525903441 |R214.1 |NEW           |                                           |Escherichia coli_E|species|
-    |599451526 |R080   |NEW           |                                           |Escherichia coli  |species|
-    |599451526 |R207   |ABSORB        |1223627963;1584917910;1670897256;2030830777|Escherichia coli  |species|
-    |599451526 |R214   |CHANGE_LIN_TAX|                                           |Escherichia coli  |species|
-    |1584917910|R089   |NEW           |                                           |Escherichia coli_C|species|
-    |1584917910|R089   |ABSORB        |174151795;266865208                        |Escherichia coli_C|species|
-    |1584917910|R207   |MERGE         |599451526                                  |Escherichia coli_C|species|
-    |1670897256|R089   |NEW           |                                           |Escherichia coli_D|species|
-    |1670897256|R207   |MERGE         |599451526                                  |Escherichia coli_D|species|
-    |1904681918|R202   |NEW           |                                           |Escherichia coli_E|species|
-    |1904681918|R214   |CHANGE_LIN_TAX|                                           |Escherichia coli_E|species|
-    |1945799576|R214.1 |NEW           |                                           |Escherichia coli  |species|
+
+|taxid     |version|change        |change-value                               |name              |rank   |
+|:---------|:------|:-------------|:------------------------------------------|:-----------------|:------|
+|174151795 |R080   |NEW           |                                           |Escherichia coli_A|species|
+|174151795 |R089   |MERGE         |1584917910                                 |Escherichia coli_A|species|
+|266865208 |R086   |NEW           |                                           |Escherichia coli_B|species|
+|266865208 |R089   |MERGE         |1584917910                                 |Escherichia coli_B|species|
+|525903441 |R214.1 |NEW           |                                           |Escherichia coli_E|species|
+|599451526 |R080   |NEW           |                                           |Escherichia coli  |species|
+|599451526 |R207   |ABSORB        |1223627963;1584917910;1670897256;2030830777|Escherichia coli  |species|
+|599451526 |R214   |CHANGE_LIN_TAX|                                           |Escherichia coli  |species|
+|1584917910|R089   |NEW           |                                           |Escherichia coli_C|species|
+|1584917910|R089   |ABSORB        |174151795;266865208                        |Escherichia coli_C|species|
+|1584917910|R207   |MERGE         |599451526                                  |Escherichia coli_C|species|
+|1670897256|R089   |NEW           |                                           |Escherichia coli_D|species|
+|1670897256|R207   |MERGE         |599451526                                  |Escherichia coli_D|species|
+|1904681918|R202   |NEW           |                                           |Escherichia coli_E|species|
+|1904681918|R214   |CHANGE_LIN_TAX|                                           |Escherichia coli_E|species|
+|1945799576|R214.1 |NEW           |                                           |Escherichia coli  |species|
 
 
 Check more [TaxonKit commands and usages](https://bioinf.shenwei.me/taxonkit/usage/).
