@@ -17,3 +17,6 @@ gtdb-taxid-changelog.csv.gz
 gtdb-taxdump.tar.gz
 taxid.map.stats*
 taxonkit
+
+
+gtdb_species.txt
