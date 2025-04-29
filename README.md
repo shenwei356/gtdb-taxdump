@@ -88,10 +88,12 @@ GTDB taxnomy files are download from https://data.gtdb.ecogenomic.org/releases/,
     ├── R214
     │   ├── ar53_taxonomy_r214.tsv.gz
     │   └── bac120_taxonomy_r214.tsv.gz
-    └── R220
-        ├── ar53_taxonomy_r220.tsv.gz
-        └── bac120_taxonomy_r220.tsv.gz
-
+    ├── R220
+    │   ├── ar53_taxonomy_r220.tsv.gz
+    │   └── bac120_taxonomy_r220.tsv.gz
+    └── R226
+        ├── ar53_taxonomy_r226.tsv.gz
+        └── bac120_taxonomy_r226.tsv.gz
 
 [TaxonKit](https://github.com/shenwei356/taxonkit) v0.12.0 or a later version is needed.
 [v0.16.0](https://github.com/shenwei356/taxonkit/blob/master/CHANGELOG.md) or a later version is preferred.
@@ -136,6 +138,9 @@ TaxIds in `int32` following BLAST and DIAMOND, rather than `uint32` in previous 
         taxonkit create-taxdump --gtdb -x gtdb-taxdump/R214/ \
             taxonomy/R220/*.tsv*  --out-dir gtdb-taxdump/R220  --force
             
+        taxonkit create-taxdump --gtdb -x gtdb-taxdump/R220/ \
+            taxonomy/R226/*.tsv*  --out-dir gtdb-taxdump/R226  --force
+            
 3. Generating TaxId changelog (Note that, it's not perfect for GTDB taxonomy).
 
 > We only check and eliminate taxid collision within a single version of taxonomy data.
@@ -160,11 +165,11 @@ Learn more about the [taxid-changelog](https://github.com/shenwei356/taxid-chang
 
 set the environment variable for simplicity
 
-    export TAXONKIT_DB=gtdb-taxdump/R220/
+    export TAXONKIT_DB=gtdb-taxdump/R226/
 
 Query the TaxId via an assembly accession
 
-    grep GCA_905234495.1 gtdb-taxdump/R220/taxid.map
+    grep GCA_905234495.1 gtdb-taxdump/R226/taxid.map
     GCA_905234495.1 254122285
 
 Query the TaxId via taxon name
@@ -194,17 +199,17 @@ Complete lineage (GTDB style)
 All lineages
 
     taxonkit list --ids 1 -I "" \
-        | taxonkit filter -E species \
+        | taxonkit filter -E species -N \
         | taxonkit reformat -I 1 -P --prefix-k d__ \
         > gtdb_species.txt
 
 Checking consistency
 
-    $ zcat taxonomy/R220/* | cut -f 2 | sort | uniq | md5sum
-    f9e0f5268ab65026894703db3eab7b4b  -
+    $ zcat taxonomy/R226/* | cut -f 2 | sort | uniq | md5sum
+    6fab08a4eb95ea64e3aa327c0a2c797b  -
 
     $ cut -f 2 gtdb_species.txt | sort | md5sum
-    f9e0f5268ab65026894703db3eab7b4b  -
+    6fab08a4eb95ea64e3aa327c0a2c797b  -
 
 
 
@@ -223,48 +228,48 @@ For other taxonomic data created by "taxonkit create-taxdump", e.g., GTDB-taxdum
 ### Species changes
 
 
-How many species are there in R220?
+How many species are there in R226?
 
-    $ taxonkit list --data-dir gtdb-taxdump/R220/ --ids 1 -I "" \
-        | taxonkit filter --data-dir gtdb-taxdump/R220/ -E species \
+    $ taxonkit list --data-dir gtdb-taxdump/R226/ --ids 1 -I "" \
+        | taxonkit filter --data-dir gtdb-taxdump/R226/ -E species -N \
         | wc -l
-    113104
+    143614
 
-How many species are added in R220?
+How many species are added in R226?
 
     $ pigz -cd gtdb-taxid-changelog.csv.gz \
-        | csvtk grep -f version -p R220 \
+        | csvtk grep -f version -p R226 \
         | csvtk grep -f change -p NEW \
         | csvtk grep -f rank -p species \
         | csvtk nrow
-    31987
+    39184
 
-How many species are deleted in R220?
+How many species are deleted in R226?
 
     $ pigz -cd gtdb-taxid-changelog.csv.gz \
-        | csvtk grep -f version -p R220 \
+        | csvtk grep -f version -p R226 \
         | csvtk grep -f change -p DELETE \
         | csvtk grep -f rank -p species \
         | csvtk nrow
-    3127
+    7392
 
-How many species are merged into others in R220?
+How many species are merged into others in R226?
 
     $ pigz -cd gtdb-taxid-changelog.csv.gz \
-        | csvtk grep -f version -p R220 \
+        | csvtk grep -f version -p R226 \
         | csvtk grep -f change -p MERGE \
         | csvtk grep -f rank -p species \
         | csvtk nrow
-    1182
+    1565
 
 ### Summary
 
-Complete lineages (R220)
+Complete lineages (R226)
 
-    $ cat gtdb-taxdump/R220/taxid.map  \
+    $ cat gtdb-taxdump/R226/taxid.map  \
         | csvtk freq -Ht -f 2 -nr \
-        | taxonkit lineage -r -n -L --data-dir gtdb-taxdump/R220/ \
-        | taxonkit reformat -I 1 -f '{k}\t{p}\t{c}\t{o}\t{f}\t{g}\t{s}' --data-dir gtdb-taxdump/R220/ \
+        | taxonkit lineage -r -n -L --data-dir gtdb-taxdump/R226/ \
+        | taxonkit reformat -I 1 -f '{k}\t{p}\t{c}\t{o}\t{f}\t{g}\t{s}' --data-dir gtdb-taxdump/R226/ \
         | csvtk add-header -t -n 'taxid,count,name,rank,superkindom,phylum,class,order,family,genus,species' \
         > taxid.map.stats.tsv
         
@@ -275,28 +280,29 @@ Frequency of species
         
     $ head -n 21 taxid.map.stats.freq-species.tsv \
         | csvtk pretty -t
+        
     species                      frequency
     --------------------------   ---------
-    Escherichia coli             38926
-    Klebsiella pneumoniae        18499
-    Staphylococcus aureus        16021
-    Salmonella enterica          15089
-    Streptococcus pneumoniae     9133
-    Acinetobacter baumannii      8536
-    Pseudomonas aeruginosa       8390
-    Mycobacterium tuberculosis   7337
-    Enterococcus_B faecium       3202
-    Enterococcus faecalis        3044
-    Clostridioides difficile     2991
-    Campylobacter_D jejuni       2873
-    Listeria monocytogenes       2517
-    Neisseria meningitidis       2336
-    Vibrio parahaemolyticus      2264
-    Streptococcus pyogenes       2258
-    Mycobacterium abscessus      2029
-    Listeria monocytogenes_B     2025
-    Burkholderia mallei          1934
-    Streptococcus agalactiae     1893
+    Escherichia coli             44640    
+    Klebsiella pneumoniae        23011    
+    Staphylococcus aureus        17542    
+    Salmonella enterica          17159    
+    Pseudomonas aeruginosa       10492    
+    Acinetobacter baumannii      10048    
+    Streptococcus pneumoniae     9446     
+    Mycobacterium tuberculosis   7631     
+    Enterococcus faecalis        4055     
+    Enterococcus_B faecium       3907     
+    Clostridioides difficile     3541     
+    Campylobacter_D jejuni       3419     
+    Enterobacter hormaechei_C    3237     
+    Listeria monocytogenes       2824     
+    Vibrio parahaemolyticus      2643     
+    Streptococcus pyogenes       2437     
+    Neisseria meningitidis       2368     
+    Listeria monocytogenes_B     2184     
+    Vibrio cholerae              2064     
+    Mycobacterium abscessus      2048
     
 
 ### Taxon history of Escherichia coli
@@ -307,7 +313,7 @@ Frequency of species
 Get the TaxId:
 
     $ echo Escherichia coli \
-        | taxonkit name2taxid --data-dir gtdb-taxdump/R220/
+        | taxonkit name2taxid --data-dir gtdb-taxdump/R226/
     Escherichia coli        599451526
 
 Any changes in the past? Hmm, of cause, it appeared in R80. 
@@ -393,13 +399,13 @@ also shows the taxonomic information of current version (R207) and the taxon his
 ### Species of the genus Escherichia
     
     # set the direcotory of taxdump file
-    export TAXONKIT_DB=gtdb-taxdump/R220
+    export TAXONKIT_DB=gtdb-taxdump/R226
     
     $ echo Escherichia | taxonkit name2taxid 
     Escherichia     1028471294
 
     $ taxonkit list --ids 1028471294 -I "" \
-        | taxonkit filter  -E species \
+        | taxonkit filter  -E species -N \
         | taxonkit lineage -Lnr \
         | tee Escherichia.tsv
     300575795       Escherichia sp005843885 species
@@ -424,14 +430,14 @@ also shows the taxonomic information of current version (R207) and the taxon his
         
 |taxid     |name                   |rank   |#assembly|
 |:---------|:----------------------|:------|:--------|
-|599451526 |Escherichia coli       |species|38926    |
-|2087647928|Escherichia albertii   |species|239      |
-|1155214706|Escherichia fergusonii |species|161      |
-|1854306313|Escherichia marmotae   |species|141      |
-|1831350832|Escherichia coli_F     |species|97       |
-|1083756244|Escherichia ruysiae    |species|62       |
-|300575795 |Escherichia sp005843885|species|37       |
-|1705205476|Escherichia whittamii  |species|4        |
+|599451526 |Escherichia coli       |species|44640    |
+|2087647928|Escherichia albertii   |species|279      |
+|1155214706|Escherichia fergusonii |species|187      |
+|1854306313|Escherichia marmotae   |species|166      |
+|1831350832|Escherichia coli_F     |species|134      |
+|1083756244|Escherichia ruysiae    |species|73       |
+|300575795 |Escherichia sp005843885|species|41       |
+|1705205476|Escherichia whittamii  |species|7        |
 |1904681918|Escherichia coli_E     |species|2        |
 |1627494196|Escherichia sp002965065|species|2        |
 |1004016418|Escherichia sp004211955|species|2        |
@@ -444,29 +450,30 @@ and [GCF_023276905.1](https://gtdb.ecogenomic.org/genome?gid=GCF_023276905.1) (f
       231798968 [no rank] 011881725
       1417695290 [no rank] 023276905
 
-    $ grep 011881725 gtdb-taxdump/R220/taxid.map
+    $ grep 011881725 gtdb-taxdump/R226/taxid.map
     GCF_011881725.1 231798968
 
 ### Common manipulations
 
 Except the four taxdump files, we provide a `taxid.map` file which maps genome accessions to TaxIds.
 
-    $ wc -l gtdb-taxdump/R220/*
-        23767 gtdb-taxdump/R220/delnodes.dmp
-         1322 gtdb-taxdump/R220/merged.dmp
-       743239 gtdb-taxdump/R220/names.dmp
-       743239 gtdb-taxdump/R220/nodes.dmp
-          107 gtdb-taxdump/R220/ranks.txt
-       596859 gtdb-taxdump/R220/taxid.map
+    $ wc -l gtdb-taxdump/R226/*
+        41480 gtdb-taxdump/R226/delnodes.dmp
+         1709 gtdb-taxdump/R226/merged.dmp
+       914435 gtdb-taxdump/R226/names.dmp
+       914435 gtdb-taxdump/R226/nodes.dmp
+          108 gtdb-taxdump/R226/ranks.txt
+       732475 gtdb-taxdump/R226/taxid.map
+      2604642 total
 
 List all the genomes of a species, e.g., *Akkermansia muciniphila*,
 
     # Retreive the TaxId
-    $ echo Akkermansia muciniphila | taxonkit name2taxid --data-dir gtdb-taxdump/R220
+    $ echo Akkermansia muciniphila | taxonkit name2taxid --data-dir gtdb-taxdump/R226
     Akkermansia muciniphila 791276584
     
     # list subtree
-    $ taxonkit list --data-dir gtdb-taxdump/R220 -nr --ids  791276584 | head -n 5
+    $ taxonkit list --data-dir gtdb-taxdump/R226 -nr --ids  791276584 | head -n 5
     791276584 [species] Akkermansia muciniphila
       2229511 [no rank] 948901395
       3636769 [no rank] 948711495
@@ -474,7 +481,7 @@ List all the genomes of a species, e.g., *Akkermansia muciniphila*,
       7567111 [no rank] 949384685
     
     # mapping TaxIds to Genome accessions with taxid.map
-    $ taxonkit list --data-dir gtdb-taxdump/R220 -I "" --ids  791276584 \
+    $ taxonkit list --data-dir gtdb-taxdump/R226 -I "" --ids  791276584 \
         | csvtk join -Ht -f '1;2' - gtdb-taxdump/R220/taxid.map \
         | head -n 5
     2229511 GCA_948901395.1

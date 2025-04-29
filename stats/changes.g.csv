@@ -29,6 +29,11 @@ R095,newly_added,60770
 R095,merged,845
 R095,deleted_reused,135
 R095,merged_reused,100
+R226,deleted,17923
+R226,newly_added,190468
+R226,merged,1700
+R226,deleted_reused,210
+R226,merged_reused,65
 R089,deleted,7012
 R089,newly_added,42082
 R089,merged,2839
