@@ -42,7 +42,7 @@ p <- ggplot(df, aes(x = version, y = count, fill = types)) +
   ylab("#TaxIds") +
   theme1 +
   labs(title = "GTDB Taxonomy changes",
-    subtitle = "R80 ~ R226",
+    subtitle = "R80 ~ R232",
     caption = "https://github.com/shenwei356/gtdb-taxdump"
   )
 

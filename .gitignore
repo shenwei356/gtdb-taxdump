@@ -20,3 +20,6 @@ taxonkit
 
 
 gtdb_species.txt
+gtdb.tsv
+ncbi-viral.tsv
+taxids.txt
